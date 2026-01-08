@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  spark:
+    image: apache/spark:3.4.0
+    container_name: spark
+    hostname: spark
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./app:/app
+      - ./data:/data
+    command: bash -c "sleep infinity"  # on démarre le conteneur et on exécute spark-submit manuellement
+
+  mongo:
+    image: mongo:6
+    container_name: mongo
+    hostname: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: crime_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  mongo_data:
+  pgdata:
