@@ -1,0 +1,1 @@
+data/ValeursFoncieres-2025-S1.txt filter=lfs diff=lfs merge=lfs -text
