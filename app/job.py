@@ -2,9 +2,7 @@
 from pyspark.sql import SparkSession
 import pandas as pd
 
-# ============================
-# 1️⃣ Spark session avec MongoDB + PostgreSQL packages
-# ============================
+# Spark session avec MongoDB + PostgreSQL packages
 spark = SparkSession.builder \
     .appName("CriminaliteVsImmobilier") \
     .config("spark.jars.packages",
@@ -13,9 +11,7 @@ spark = SparkSession.builder \
     .config("spark.mongodb.write.connection.uri", "mongodb://mongo:27017/dvf.prix") \
     .getOrCreate()
 
-# ============================
-# 2️⃣ Charger DVF
-# ============================
+# Charger DVF
 dvf_file = "/data/ValeursFoncieres-2025-S1.txt"
 dvf = pd.read_csv(dvf_file, sep='|', low_memory=False)
 dvf.columns = [c.strip().lower().replace(' ', '_') for c in dvf.columns]
@@ -31,30 +27,24 @@ dvf = dvf.groupby('code_departement')['prix_m2'].mean().reset_index()
 dvf = dvf.head(50)
 
 dvf_spark = spark.createDataFrame(dvf)
-print("✅ DVF chargé :")
+print(" DVF chargé :")
 dvf_spark.show()
 
-# ============================
-# 3️⃣ Charger criminalité
-# ============================
+#Charger criminalité
 crime_file = "/data/donnee-dep-data.gouv-2024-geographie2025-produit-le2025-06-04.csv"
 crime = pd.read_csv(crime_file, sep=';', low_memory=False)
 crime.columns = [c.strip().lower().replace(' ', '_') for c in crime.columns]
 crime = crime[crime['indicateur']=='Homicides'][['code_departement','taux_pour_mille']]
 crime = crime.head(50)
 crime_spark = spark.createDataFrame(crime)
-print("✅ Criminalité chargé :")
+print("Criminalité chargé :")
 crime_spark.show()
 
-# ============================
-# 4️⃣ Stocker DVF dans MongoDB
-# ============================
+# Stocker DVF dans MongoDB
 dvf_spark.write.format("mongodb").mode("overwrite").save()
-print("✅ DVF stocké dans MongoDB")
+print("DVF stocké dans MongoDB")
 
-# ============================
-# 5️⃣ Stocker criminalité dans PostgreSQL
-# ============================
+#Stocker criminalité dans PostgreSQL
 crime_spark.write \
     .format("jdbc") \
     .option("url", "jdbc:postgresql://postgres:5432/crime_db") \
@@ -63,13 +53,11 @@ crime_spark.write \
     .option("password", "pass") \
     .mode("overwrite") \
     .save()
-print("✅ Criminalité stockée dans PostgreSQL")
+print("Criminalité stockée dans PostgreSQL")
 
-# ============================
-# 6️⃣ Jointure départementale
-# ============================
+#Jointure départementale
 df_final = dvf_spark.join(crime_spark, on="code_departement", how="inner")
-print("✅ Jointure effectuée :")
+print("Jointure effectuée :")
 df_final.show()
 
 
